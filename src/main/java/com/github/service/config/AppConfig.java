@@ -12,17 +12,17 @@ import java.util.List;
 @Configuration
 public class AppConfig {
 
-    private String serverDescription = "API Description";
+    private static final String SERVER_DESCRIPTION = "API Description";
 
     @Bean
     public OpenAPI springUserOpenAPI() {
         return new OpenAPI()
                 .info(new Info()
-                        .title("QRService API")
-                        .description("The available REST-API to create qr-codes.")
+                        .title("Service API")
+                        .description("The available REST-API to do things.")
                         .license(new License()
                                 .name("MIT License")
-                                .url("http://www.opensource.org/licenses/mit-license.php")))
-                .servers(List.of(new Server().url("/").description(serverDescription)));
+                                .url("https://www.opensource.org/licenses/mit-license.php")))
+                .servers(List.of(new Server().url("/").description(SERVER_DESCRIPTION)));
     }
 }
