@@ -6,7 +6,7 @@
 # separate terms of service, privacy policy, and support
 # documentation.
 
-name: Java CI with Maven
+name: "Java CI with Maven and Docker"
 
 on:
   push:
@@ -16,8 +16,7 @@ on:
     branches: [ "main" ]
 
 jobs:
-  build:
-
+  ci-build:
     runs-on: ubuntu-latest
     permissions: write-all
     steps:
@@ -66,5 +65,38 @@ jobs:
         echo "Outputs: ${{ steps.tag_version_develop.outputs.version }}"
 
     - name: Build with Maven
+      id: maven_build
       run: mvn -Drevision="${{ steps.tag_version_develop.outputs.version }}" -B --no-transfer-progress package --file pom.xml
 
+    - name: Show build output
+      run: |
+        echo "github.workspace: ${{ github.workspace }}"
+        echo "current directory: $(pwd)"
+        echo "------------ Contents of target: ---------------"
+        ls -R target
+
+    - name: Upload JAR file
+      uses: actions/upload-artifact@v4
+      with:
+        name: my-app-jar
+        path: ${{ github.workspace }}/target/*.jar
+        compression-level: '0'  # no compression - Jar is zipped anyway
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v2
+
+    - name: Log in to GitHub Container Registry
+      uses: docker/login-action@v2
+      with:
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Build and push Docker image
+      uses: docker/build-push-action@v4
+      with:
+        context: ${{ github.workspace }}
+        push: true
+        tags: ghcr.io/${{ github.repository }}/my-app:latest
+        build-args: |
+          TARGET_DIR=./target
